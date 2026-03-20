@@ -103,6 +103,9 @@ export default function ChatBot() {
     }
   }
 
+  const linkifyMarkdown = (text: string) =>
+    text.replace(/(https?:\/\/[^\s)]+)/g, (url) => `[${url}](${url})`)
+
   return (
     <>
       {/* Floating trigger button */}
@@ -227,9 +230,19 @@ export default function ChatBot() {
                               <strong style={{ color: 'var(--cyan)', fontWeight: 700 }}>{children}</strong>
                             ),
                             p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--cyan)', textDecoration: 'underline' }}
+                              >
+                                {children}
+                              </a>
+                            ),
                           }}
                         >
-                          {msg.content}
+                          {linkifyMarkdown(msg.content)}
                         </ReactMarkdown>
                       </div>
                     </div>

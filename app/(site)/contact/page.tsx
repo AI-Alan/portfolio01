@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import NeuralNetCanvas from '@/components/animations/NeuralNetCanvas'
 import toast from 'react-hot-toast'
-import { FaGithub, FaLinkedin, FaEnvelope, FaMapMarkerAlt, FaTwitter } from 'react-icons/fa'
+import { FaGithub, FaLinkedin, FaEnvelope, FaMapMarkerAlt, FaTwitter, FaInstagram, FaWhatsapp, FaPhone } from 'react-icons/fa'
 import { useProfileData } from '@/hooks/useProfileData'
 
 export default function ContactPage() {
@@ -17,6 +17,26 @@ export default function ContactPage() {
     return `https://${url}`
   }
 
+  const toPhoneHref = (value: string | undefined) => {
+    if (!value) return undefined
+    const cleaned = value.replace(/[^\d+]/g, '')
+    return cleaned ? `tel:${cleaned}` : undefined
+  }
+
+  const toWhatsappHref = (value: string | undefined) => {
+    if (!value) return undefined
+    if (value.startsWith('http')) return value
+    const digitsOnly = value.replace(/\D/g, '')
+    return digitsOnly ? `https://wa.me/${digitsOnly}` : undefined
+  }
+
+  const toInstagramHref = (value: string | undefined) => {
+    if (!value) return undefined
+    if (value.startsWith('http')) return value
+    const handle = value.startsWith('@') ? value.slice(1) : value
+    return handle ? `https://instagram.com/${handle}` : undefined
+  }
+
   const contactInfo = [
     { 
       icon: <FaEnvelope />, 
@@ -24,6 +44,27 @@ export default function ContactPage() {
       value: profile.email || 'Not provided', 
       href: profile.email ? `mailto:${profile.email}` : null, 
       color: '#00fff0' 
+    },
+    {
+      icon: <FaPhone />,
+      label: 'Phone',
+      value: profile.contactNumber || 'Not provided',
+      href: toPhoneHref(profile.contactNumber) || null,
+      color: '#22c55e'
+    },
+    {
+      icon: <FaWhatsapp />,
+      label: 'WhatsApp',
+      value: profile.whatsapp || 'Not provided',
+      href: toWhatsappHref(profile.whatsapp) || null,
+      color: '#25D366'
+    },
+    {
+      icon: <FaInstagram />,
+      label: 'Instagram',
+      value: profile.instagram || 'Not provided',
+      href: toInstagramHref(profile.instagram) || null,
+      color: '#E1306C'
     },
     { 
       icon: <FaGithub />, 

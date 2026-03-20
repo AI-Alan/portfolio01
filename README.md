@@ -129,14 +129,68 @@ From the dashboard you can:
 
 ## 💬 Gemini AI Chatbot (ARIA)
 
-The floating bot in the **bottom-left corner** is powered by Gemini 1.5 Flash.
+The floating bot in the **bottom-left corner** is powered by Gemini and now uses **dynamic, selective retrieval**.
 
-To update what ARIA knows about you, edit the system prompt in:
-\`\`\`
-lib/gemini.ts → AMAN_SYSTEM_PROMPT
-\`\`\`
+### How chat context works now
 
-Add your actual projects, skills, availability, and any other info you want ARIA to know.
+- A small base behavior prompt is always sent.
+- For each user query, the backend selectively fetches relevant data:
+  - Skills
+  - Experience
+  - Projects
+  - Private Notes (chat-only admin data)
+- Retrieval and prompt composition happen in:
+  - `lib/getChatContext.ts`
+  - `lib/gemini.ts`
+
+This keeps responses fresh and avoids sending all data on every request.
+
+### Private Notes (important)
+
+Private Notes are managed from **Admin -> Private Notes** and are used for personal details that may not appear publicly on the site (for example: internship story, birthday details, personal background).
+
+To make retrieval reliable, write notes in a structured way:
+
+- `Title`: short, clear label (example: `My Birthday`)
+- `Topic`: lowercase slug with underscores (example: `birthday_details`, `agent_mira_internship_story`)
+- `Keywords`: comma-separated search terms and variants
+- `Content`: concise factual paragraph (who/what/when/how)
+- `Enabled for Chatbot`: must be checked
+
+#### Recommended writing style
+
+- Put primary fact in the first sentence.
+- Include alternate phrasing in `keywords` (`dob`, `date of birth`, `born`, etc.).
+- Keep one note focused on one subject.
+- Avoid mixing unrelated stories in one note.
+
+#### Good example (internship)
+
+- Title: `Agent Mira Internship - How I Got It`
+- Topic: `agent_mira_internship_story`
+- Keywords: `agent mira, internship, how got internship, selection process, december 2025, february 2026, full stack intern`
+- Content: `I secured the Full Stack Engineering Internship at Agent Mira after applying through their hiring process and completing technical evaluation rounds. The internship duration was from 17 Dec 2025 to 17 Feb 2026.`
+
+#### Good example (birthday)
+
+- Title: `My Birthday`
+- Topic: `birthday_details`
+- Keywords: `birthday, date of birth, dob, born, 1 march 2005, 01-03-2005`
+- Content: `My date of birth is 1 March 2005 (01-03-2005). I was born in Gonda district, Uttar Pradesh, India.`
+
+#### Common mistakes (causes missed retrieval)
+
+- Topic written as a sentence instead of a slug
+- Missing keyword variants users actually type
+- Very long note with mixed unrelated topics
+- Note is not enabled for chatbot
+
+### Debug checklist if bot misses a private note
+
+1. Open Admin -> Private Notes and verify note is enabled.
+2. Ensure `topic` is slug-like and `keywords` include likely user phrasing.
+3. Ask a query that includes one of your keywords.
+4. If still not working, restart dev server (`npm run dev`) to clear local dev module cache artifacts.
 
 ---
 

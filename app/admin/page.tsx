@@ -5,11 +5,11 @@ import toast from 'react-hot-toast'
 import {
   FaLock, FaSignOutAlt, FaPlus, FaEdit, FaTrash,
   FaFolder, FaNewspaper, FaTools, FaBriefcase, FaEnvelope,
-  FaTimes, FaSave, FaEye, FaEyeSlash, FaUser, FaBrain
+  FaTimes, FaSave, FaEye, FaEyeSlash, FaUser, FaBrain, FaUserSecret
 } from 'react-icons/fa'
 
 /* ── Types ─────────────────────────────────────────────── */
-type Tab = 'profile' | 'focus' | 'projects' | 'blogs' | 'skills' | 'experience' | 'messages'
+type Tab = 'profile' | 'focus' | 'projects' | 'blogs' | 'skills' | 'experience' | 'messages' | 'privateNotes'
 
 interface FormField { label: string; key: string; type: string; options?: string[] }
 
@@ -167,6 +167,7 @@ function DeleteConfirm({ onConfirm, onCancel }: { onConfirm: () => void; onCance
 /* ── Profile Panel (single-record, no list) ─────────────── */
 interface ProfileData {
   name: string; tagline: string; bio: string; email: string
+  contactNumber: string; whatsapp: string; instagram: string
   github: string; linkedin: string; twitter: string; profileImage: string
   resumeUrl: string; location: string; availableForWork: boolean
   heroTypingTexts: string
@@ -181,6 +182,9 @@ const PROFILE_FIELDS: FormField[] = [
   { label: 'Tagline / Title', key: 'tagline', type: 'text' },
   { label: 'Bio (2–3 sentences)', key: 'bio', type: 'textarea' },
   { label: 'Contact Email', key: 'email', type: 'email' },
+  { label: 'Contact Number', key: 'contactNumber', type: 'text' },
+  { label: 'WhatsApp (number or URL)', key: 'whatsapp', type: 'text' },
+  { label: 'Instagram (URL or handle)', key: 'instagram', type: 'text' },
   { label: 'Location', key: 'location', type: 'text' },
   { label: 'GitHub URL', key: 'github', type: 'text' },
   { label: 'LinkedIn URL', key: 'linkedin', type: 'text' },
@@ -197,7 +201,7 @@ const PROFILE_FIELDS: FormField[] = [
 
 function ProfilePanel({ token }: { token: string | null }) {
   const [profile, setProfile] = useState<ProfileData>({
-    name: '', tagline: '', bio: '', email: '', github: '', linkedin: '',
+    name: '', tagline: '', bio: '', email: '', contactNumber: '', whatsapp: '', instagram: '', github: '', linkedin: '',
     twitter: '', resumeUrl: '', profileImage: '', location: '', availableForWork: true, heroTypingTexts: '',
     projectsCount: '0', technologiesCount: '0', yearOfStudy: '', coffeeCups: '∞',
   })
@@ -215,6 +219,9 @@ function ProfilePanel({ token }: { token: string | null }) {
             tagline: p.tagline ?? '',
             bio: p.bio ?? '',
             email: p.email ?? '',
+            contactNumber: p.contactNumber ?? '',
+            whatsapp: p.whatsapp ?? '',
+            instagram: p.instagram ?? '',
             github: p.github ?? '',
             linkedin: p.linkedin ?? '',
             twitter: p.twitter ?? '',
@@ -250,7 +257,10 @@ function ProfilePanel({ token }: { token: string | null }) {
         body: JSON.stringify(body),
       })
       const d = await res.json()
-      if (d.success) toast.success('Profile saved!')
+      if (d.success) {
+        localStorage.setItem('profile_cache_bust', String(Date.now()))
+        toast.success('Profile saved!')
+      }
       else toast.error(d.error || 'Failed to save profile')
     } catch { toast.error('Network error') }
     finally { setSaving(false) }
@@ -448,6 +458,33 @@ const TAB_CONFIG: Record<Exclude<Tab, 'profile'>, {
       </div>
     ),
   },
+  privateNotes: {
+    label: 'Private Notes', icon: <FaUserSecret />, color: '#f97316',
+    endpoint: '/api/private-notes',
+    deleteEndpoint: (id) => `/api/private-notes/${id}`,
+    emptyForm: { title: '', topic: '', content: '', keywords: '', enabled: true },
+    fields: [
+      { label: 'Title', key: 'title', type: 'text' },
+      { label: 'Topic (e.g. internship_story)', key: 'topic', type: 'text' },
+      { label: 'Keywords (comma separated)', key: 'keywords', type: 'text' },
+      { label: 'Content', key: 'content', type: 'textarea' },
+      { label: 'Enabled for Chatbot', key: 'enabled', type: 'checkbox' },
+    ],
+    renderRow: (item) => (
+      <div>
+        <div className="font-orbitron font-bold text-sm text-white">{String(item.title)}</div>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="font-mono-tech text-xs px-2 py-0.5 rounded-full"
+            style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', border: '1px solid rgba(249,115,22,0.35)' }}>
+            {String(item.topic)}
+          </span>
+          <span className={`font-mono-tech text-xs ${Boolean(item.enabled) ? 'text-green-400' : 'text-yellow-400'}`}>
+            {Boolean(item.enabled) ? 'Enabled' : 'Disabled'}
+          </span>
+        </div>
+      </div>
+    ),
+  },
 }
 
 /* ── Sidebar ────────────────────────────────────────────── */
@@ -459,6 +496,7 @@ const SIDEBAR_TABS: { key: Tab; label: string; icon: React.ReactNode; color: str
   { key: 'skills',     label: 'Skills',      icon: <FaTools />,     color: '#00ff88' },
   { key: 'experience', label: 'Experience',  icon: <FaBriefcase />, color: '#ffff00' },
   { key: 'messages',   label: 'Messages',    icon: <FaEnvelope />,  color: '#ff6600' },
+  { key: 'privateNotes', label: 'Private Notes', icon: <FaUserSecret />, color: '#f97316' },
 ]
 
 function Sidebar({ active, setActive }: { active: Tab; setActive: (t: Tab) => void }) {
@@ -577,6 +615,7 @@ export default function AdminPage() {
     const body = { ...formData }
     if (typeof body.tags === 'string') body.tags = (body.tags as string).split(',').map(s => s.trim()).filter(Boolean)
     if (typeof body.techStack === 'string') body.techStack = (body.techStack as string).split(',').map(s => s.trim()).filter(Boolean)
+    if (typeof body.keywords === 'string') body.keywords = (body.keywords as string).split(',').map(s => s.trim()).filter(Boolean)
 
     const isEdit = modal.mode === 'edit' && modal.item?._id
     const url = isEdit && cfg.deleteEndpoint
@@ -807,6 +846,7 @@ export default function AdminPage() {
                             const formItem: Record<string, unknown> = { ...item }
                             if (Array.isArray(formItem.tags)) formItem.tags = (formItem.tags as string[]).join(', ')
                             if (Array.isArray(formItem.techStack)) formItem.techStack = (formItem.techStack as string[]).join(', ')
+                            if (Array.isArray(formItem.keywords)) formItem.keywords = (formItem.keywords as string[]).join(', ')
                             setModal({ open: true, mode: 'edit', item: formItem })
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded transition-all hover:scale-110"

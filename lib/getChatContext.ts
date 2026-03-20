@@ -1,4 +1,5 @@
 import { getExperienceData } from '@/lib/getExperienceData'
+import { getPrivateNotesData } from '@/lib/getPrivateNotesData'
 import { getProfileData } from '@/lib/getProfileData'
 import { getProjectsData } from '@/lib/getProjectsData'
 import { getSkillsData } from '@/lib/getSkillsData'
@@ -13,25 +14,39 @@ function truncateText(value: string, max = 180) {
 }
 
 export async function getChatContextPrompt(): Promise<string> {
-  const [profile, projects, skills, experience] = await Promise.all([
+  const [profile, projects, skills, experience, privateNotes] = await Promise.all([
     getProfileData(),
     getProjectsData(),
     getSkillsData(),
     getExperienceData(),
+    getPrivateNotesData(),
   ])
 
-  const featuredProjects = projects
-    .filter((project) => project.featured)
-    .slice(0, 6)
-    .map((project) => `${project.title} (${project.category}) - ${truncateText(project.description, 120)}`)
+  const projectBullets = projects
+    .slice(0, 8)
+    .map((project) => {
+      const tags = project.tags.length > 0 ? ` | Tags: ${project.tags.slice(0, 4).join(', ')}` : ''
+      return `${project.title} (${project.category})${tags}`
+    })
 
-  const topSkills = skills
-    .slice(0, 18)
+  const skillBullets = skills
+    .slice(0, 14)
     .map((skill) => `${skill.name} [${skill.category}] - ${skill.level}%`)
 
-  const latestExperience = experience
+  const experienceBullets = experience
+    .slice(0, 8)
+    .map((item) => {
+      const period = `${item.startDate} to ${item.current ? 'Present' : item.endDate || 'N/A'}`
+      const tags = item.tags && item.tags.length > 0 ? ` | Tags: ${item.tags.slice(0, 4).join(', ')}` : ''
+      return `${item.type}: ${item.title} at ${item.organization} (${period})${tags}`
+    })
+
+  const privateNoteBullets = privateNotes
     .slice(0, 10)
-    .map((item) => `${item.type}: ${item.title} at ${item.organization} (${item.startDate} to ${item.current ? 'Present' : item.endDate || 'N/A'})`)
+    .map((note) => {
+      const keys = note.keywords.length > 0 ? ` | Keywords: ${note.keywords.join(', ')}` : ''
+      return `${note.topic} (${note.title})${keys} | Details: ${note.content}`
+    })
 
   const availability = profile.availableForWork
     ? 'Open to opportunities (internships / collaborations / freelance).'
@@ -50,14 +65,17 @@ export async function getChatContextPrompt(): Promise<string> {
 ### Bio
 - ${truncateText(profile.bio || 'No bio provided yet.', 360)}
 
-### Top Skills
-${topSkills.length > 0 ? toBulletList(topSkills) : '- No skills available.'}
+### Skills
+${skillBullets.length > 0 ? toBulletList(skillBullets) : '- No skills found.'}
 
-### Latest Experience & Education
-${latestExperience.length > 0 ? toBulletList(latestExperience) : '- No experience entries available.'}
+### Experience & Education
+${experienceBullets.length > 0 ? toBulletList(experienceBullets) : '- No experience entries found.'}
 
-### Featured Projects
-${featuredProjects.length > 0 ? toBulletList(featuredProjects) : '- No featured projects available.'}
+### Projects
+${projectBullets.length > 0 ? toBulletList(projectBullets) : '- No projects found.'}
+
+### Private Notes (chat-only)
+${privateNoteBullets.length > 0 ? toBulletList(privateNoteBullets) : '- No private notes found.'}
 
 ### Contact & Links
 - Email: ${profile.email || 'Use contact page'}

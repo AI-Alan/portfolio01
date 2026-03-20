@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import NeuralNetCanvas from '@/components/animations/NeuralNetCanvas'
-import { FaGithub, FaLinkedin, FaTwitter, FaDownload } from 'react-icons/fa'
+import { FaGithub, FaLinkedin, FaWhatsapp, FaEnvelope, FaDownload } from 'react-icons/fa'
 import { HiArrowDown } from 'react-icons/hi'
 import { useProfileData } from '@/hooks/useProfileData'
 
@@ -57,10 +57,18 @@ export default function HeroSection() {
     return `https://${url}`
   }
 
+  const toWhatsappHref = (value: string | undefined) => {
+    if (!value) return undefined
+    if (value.startsWith('http')) return value
+    const digitsOnly = value.replace(/\D/g, '')
+    return digitsOnly ? `https://wa.me/${digitsOnly}` : undefined
+  }
+
   const socials = [
     { icon: <FaGithub size={20} />, href: ensureAbsoluteUrl(profile.github), label: 'GitHub' },
     { icon: <FaLinkedin size={20} />, href: ensureAbsoluteUrl(profile.linkedin), label: 'LinkedIn' },
-    { icon: <FaTwitter size={20} />, href: ensureAbsoluteUrl(profile.twitter), label: 'Twitter' },
+    { icon: <FaWhatsapp size={20} />, href: toWhatsappHref(profile.whatsapp), label: 'WhatsApp' },
+    { icon: <FaEnvelope size={20} />, href: profile.email ? `mailto:${profile.email}` : undefined, label: 'Email' },
   ].filter((s) => s.href)
 
   const displayName = profile.name || 'Aman Kumar Yadav'

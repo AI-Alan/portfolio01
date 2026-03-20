@@ -5,6 +5,9 @@ export interface IProfile extends Document {
   tagline: string
   bio: string
   email: string
+  contactNumber?: string
+  whatsapp?: string
+  instagram?: string
   github?: string
   linkedin?: string
   twitter?: string
@@ -27,6 +30,9 @@ const ProfileSchema = new Schema<IProfile>(
     tagline: { type: String, default: 'AI / ML Engineer & Intelligent Systems Developer' },
     bio: { type: String, default: '' },
     email: { type: String, default: '' },
+    contactNumber: { type: String, default: '' },
+    whatsapp: { type: String, default: '' },
+    instagram: { type: String, default: '' },
     github: { type: String },
     linkedin: { type: String },
     twitter: { type: String },

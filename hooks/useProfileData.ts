@@ -6,6 +6,9 @@ export interface ProfileData {
   tagline: string
   bio: string
   email: string
+  contactNumber?: string
+  whatsapp?: string
+  instagram?: string
   github?: string
   linkedin?: string
   twitter?: string
@@ -26,6 +29,9 @@ const DEFAULT_PROFILE: ProfileData = {
   tagline: 'AI / ML Engineer & Intelligent Systems Developer',
   bio: '',
   email: '',
+  contactNumber: '',
+  whatsapp: '',
+  instagram: '',
   github: '',
   linkedin: '',
   twitter: '',
@@ -45,8 +51,21 @@ const DEFAULT_PROFILE: ProfileData = {
 
 let profileCache: ProfileData | null = null
 let profileRequest: Promise<ProfileData> | null = null
+let profileCacheBustToken = ''
+
+function getProfileBustToken() {
+  if (typeof window === 'undefined') return ''
+  return localStorage.getItem('profile_cache_bust') || ''
+}
 
 async function fetchProfileData(): Promise<ProfileData> {
+  const latestBustToken = getProfileBustToken()
+  if (latestBustToken && latestBustToken !== profileCacheBustToken) {
+    profileCache = null
+    profileRequest = null
+    profileCacheBustToken = latestBustToken
+  }
+
   if (profileCache) return profileCache
   if (profileRequest) return profileRequest
 
@@ -70,6 +89,9 @@ export function useProfileData() {
   const [loading, setLoading] = useState(!profileCache)
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      profileCacheBustToken = getProfileBustToken()
+    }
     fetchProfileData()
       .then(setProfile)
       .finally(() => setLoading(false))
