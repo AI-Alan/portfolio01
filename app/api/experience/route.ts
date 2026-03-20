@@ -6,7 +6,7 @@ import { isAuthenticated } from '@/lib/auth'
 export async function GET() {
   try {
     await connectDB()
-    const exp = await Experience.find().sort({ startDate: -1 })
+    const exp = await Experience.find().sort({ current: -1, startDate: -1 })
     return NextResponse.json({ success: true, data: exp })
   } catch {
     return NextResponse.json({ error: 'Failed to fetch experience' }, { status: 500 })

@@ -44,3 +44,17 @@ export const SKILL_CATEGORY_COLORS: Record<string, string> = {
   'Languages': '#ff6600',
   'Tools': '#8888ff',
 }
+
+export function getDirectImageUrl(url: string | undefined): string {
+  if (!url) return ''
+  
+  // Google Drive conversion
+  const driveRegex = /(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/
+  const match = url.match(driveRegex)
+  
+  if (match && match[1]) {
+    return `https://lh3.googleusercontent.com/d/${match[1]}`
+  }
+  
+  return url
+}

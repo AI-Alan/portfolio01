@@ -4,6 +4,7 @@ import { motion, useInView } from 'framer-motion'
 import FloatingParticles from '@/components/animations/FloatingParticles'
 import { FaBrain, FaRobot, FaCode, FaEye } from 'react-icons/fa'
 import { useProfileData } from '@/hooks/useProfileData'
+import { getDirectImageUrl } from '@/lib/utils'
 
 interface FocusArea {
   _id?: string
@@ -96,7 +97,7 @@ export default function AboutSection() {
               <div className="w-56 h-56 rounded-lg overflow-hidden relative hud-corner hologram"
                 style={{ border: '1px solid rgba(0,255,240,0.3)' }}>
                 {profile.profileImage ? (
-                  <img src={profile.profileImage} alt={profile.name} className="w-full h-full object-cover" />
+                  <img src={getDirectImageUrl(profile.profileImage)} alt={profile.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"
                     style={{ background: 'linear-gradient(135deg, #0d0d1a, #1a1a2e)' }}>
