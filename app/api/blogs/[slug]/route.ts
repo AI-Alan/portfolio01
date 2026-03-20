@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import connectDB from '@/lib/db'
 import Blog from '@/models/Blog'
 import { isAuthenticated } from '@/lib/auth'
@@ -7,9 +8,20 @@ import { calculateReadTime } from '@/lib/utils'
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     await connectDB()
-    const blog = await Blog.findOne({ slug: params.slug })
+    const adminView = isAuthenticated(req)
+    const query = adminView ? { slug: params.slug } : { slug: params.slug, published: true }
+    const blog = await Blog.findOne(query).lean()
     if (!blog) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    return NextResponse.json({ success: true, data: blog })
+    return NextResponse.json(
+      { success: true, data: blog },
+      {
+        headers: {
+          'Cache-Control': adminView
+            ? 'private, no-store'
+            : 'public, s-maxage=1800, stale-while-revalidate=86400',
+        },
+      }
+    )
   } catch {
     return NextResponse.json({ error: 'Failed to fetch blog' }, { status: 500 })
   }
@@ -23,6 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: { slug: string
     if (body.content) body.readTime = calculateReadTime(body.content)
     const blog = await Blog.findOneAndUpdate({ slug: params.slug }, body, { new: true })
     if (!blog) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    revalidateTag('blogs-data')
     return NextResponse.json({ success: true, data: blog })
   } catch {
     return NextResponse.json({ error: 'Failed to update blog' }, { status: 500 })
@@ -34,6 +47,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { slug: str
   try {
     await connectDB()
     await Blog.findOneAndDelete({ slug: params.slug })
+    revalidateTag('blogs-data')
     return NextResponse.json({ success: true, message: 'Blog deleted' })
   } catch {
     return NextResponse.json({ error: 'Failed to delete blog' }, { status: 500 })

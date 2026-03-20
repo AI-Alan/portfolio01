@@ -2,8 +2,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import MatrixRain from '@/components/animations/MatrixRain'
-
-interface Skill { _id: string; name: string; category: string; level: number; color?: string }
+import type { Skill } from '@/types'
 
 const CATEGORY_COLORS: Record<string, string> = {
   'AI/ML': '#00fff0',
@@ -48,25 +47,19 @@ function SkillBar({ name, level, color, delay }: { name: string; level: number; 
   )
 }
 
-export default function SkillsSection() {
+interface SkillsSectionProps {
+  skills: Skill[]
+}
+
+export default function SkillsSection({ skills }: SkillsSectionProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const [skills, setSkills] = useState<Skill[]>([])
   const [activeTab, setActiveTab] = useState('')
 
   useEffect(() => {
-    fetch('/api/skills')
-      .then(r => r.json())
-      .then(data => {
-        if (data?.data?.length) {
-          setSkills(data.data)
-          // Default to first category
-          const first = data.data[0]?.category
-          if (first) setActiveTab(first)
-        }
-      })
-      .catch(() => {})
-  }, [])
+    const first = skills[0]?.category
+    if (first && !activeTab) setActiveTab(first)
+  }, [skills, activeTab])
 
   // Group skills by category
   const grouped = skills.reduce<Record<string, Skill[]>>((acc, skill) => {

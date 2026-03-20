@@ -43,17 +43,35 @@ const DEFAULT_PROFILE: ProfileData = {
   coffeeCups: '∞',
 }
 
+let profileCache: ProfileData | null = null
+let profileRequest: Promise<ProfileData> | null = null
+
+async function fetchProfileData(): Promise<ProfileData> {
+  if (profileCache) return profileCache
+  if (profileRequest) return profileRequest
+
+  profileRequest = fetch('/api/profile')
+    .then((r) => r.json())
+    .then((data) => (data?.profile ? data.profile : DEFAULT_PROFILE))
+    .catch(() => DEFAULT_PROFILE)
+    .then((profile) => {
+      profileCache = profile
+      return profile
+    })
+    .finally(() => {
+      profileRequest = null
+    })
+
+  return profileRequest
+}
+
 export function useProfileData() {
-  const [profile, setProfile] = useState<ProfileData>(DEFAULT_PROFILE)
-  const [loading, setLoading] = useState(true)
+  const [profile, setProfile] = useState<ProfileData>(profileCache ?? DEFAULT_PROFILE)
+  const [loading, setLoading] = useState(!profileCache)
 
   useEffect(() => {
-    fetch('/api/profile')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.profile) setProfile(data.profile)
-      })
-      .catch(() => {/* use defaults */})
+    fetchProfileData()
+      .then(setProfile)
       .finally(() => setLoading(false))
   }, [])
 

@@ -1,19 +1,9 @@
 'use client'
-import { useRef, useEffect, useState } from 'react'
+import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
 import { FaGithub, FaExternalLinkAlt } from 'react-icons/fa'
-
-interface Project {
-  _id: string
-  title: string
-  description: string
-  tags: string[]
-  category: string
-  github?: string
-  demo?: string
-  featured: boolean
-}
+import type { Project } from '@/types'
 
 const CAT_COLORS: Record<string, string> = {
   AI: '#00fff0', ML: '#ff00ff', Robotics: '#ffff00', Web: '#00ff88', CV: '#ff00ff', Other: '#8888ff',
@@ -23,17 +13,13 @@ const CAT_ACCENT: Record<string, string> = {
   AI: '#00fff0', ML: '#ff00ff', Robotics: '#ffff00', Web: '#00ff88', CV: '#ff00ff', Other: '#8888ff',
 }
 
-export default function FeaturedProjects() {
+interface FeaturedProjectsProps {
+  projects: Project[]
+}
+
+export default function FeaturedProjects({ projects }: FeaturedProjectsProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
-  const [projects, setProjects] = useState<Project[]>([])
-
-  useEffect(() => {
-    fetch('/api/projects?featured=true')
-      .then(r => r.json())
-      .then(data => { if (data?.data) setProjects(data.data) })
-      .catch(() => {})
-  }, [])
 
   return (
     <section id="projects-preview" className="relative py-24 overflow-hidden" ref={ref}>

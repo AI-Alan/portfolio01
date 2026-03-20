@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import connectDB from '@/lib/db'
 import Profile from '@/models/Profile'
 import { isAuthenticated } from '@/lib/auth'
@@ -12,7 +13,14 @@ export async function GET() {
       // Auto-create default profile on first access
       profile = await Profile.create({})
     }
-    return NextResponse.json({ success: true, profile })
+    return NextResponse.json(
+      { success: true, profile },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=86400',
+        },
+      }
+    )
   } catch (error) {
     console.error('Profile GET error:', error)
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
@@ -39,6 +47,7 @@ export async function PUT(req: NextRequest) {
       Object.assign(profile, data)
       await profile.save()
     }
+    revalidateTag('profile-data')
     return NextResponse.json({ success: true, profile })
   } catch (error) {
     console.error('Profile PUT error:', error)

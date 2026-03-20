@@ -1,19 +1,8 @@
 'use client'
-import { useRef, useEffect, useState } from 'react'
+import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { FaGraduationCap, FaBriefcase, FaTrophy, FaCode, FaLaptopCode } from 'react-icons/fa'
-
-interface Experience {
-  _id: string
-  type: string
-  title: string
-  organization: string
-  startDate: string
-  endDate?: string
-  current: boolean
-  description: string
-  tags?: string[]
-}
+import type { ExperienceItem } from '@/lib/getExperienceData'
 
 const TYPE_COLORS: Record<string, string> = {
   Education: '#00fff0',
@@ -31,7 +20,7 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
   Work: <FaLaptopCode size={16} />,
 }
 
-function formatPeriod(exp: Experience): string {
+function formatPeriod(exp: ExperienceItem): string {
   return exp.current
     ? `${exp.startDate} — Present`
     : exp.endDate
@@ -39,17 +28,13 @@ function formatPeriod(exp: Experience): string {
       : exp.startDate
 }
 
-export default function ExperienceSection() {
+interface ExperienceSectionProps {
+  experiences: ExperienceItem[]
+}
+
+export default function ExperienceSection({ experiences }: ExperienceSectionProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-80px' })
-  const [experiences, setExperiences] = useState<Experience[]>([])
-
-  useEffect(() => {
-    fetch('/api/experience')
-      .then(r => r.json())
-      .then(data => { if (data?.data) setExperiences(data.data) })
-      .catch(() => {})
-  }, [])
 
   return (
     <section id="experience" className="relative py-24 overflow-hidden" ref={ref}>
