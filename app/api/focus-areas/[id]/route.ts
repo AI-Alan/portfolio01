@@ -18,6 +18,14 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
+export async function PATCH(req: NextRequest, ctx: { params: { id: string } }) {
+  return PUT(req, ctx)
+}
+
+export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
+  return PUT(req, ctx)
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   if (!isAuthenticated(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   await connectDB()
@@ -29,4 +37,15 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'PUT, PATCH, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Methods': 'PUT, PATCH, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 }

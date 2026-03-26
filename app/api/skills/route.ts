@@ -33,3 +33,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create skill' }, { status: 500 })
   }
 }
+
+export async function PUT(req: NextRequest) {
+  if (!isAuthenticated(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    await connectDB()
+    const body = await req.json()
+    const id = body?._id
+    if (!id) return NextResponse.json({ error: 'Skill id is required' }, { status: 400 })
+    delete body._id
+    delete body.__v
+    const skill = await Skill.findByIdAndUpdate(id, body, { new: true })
+    if (!skill) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    revalidateTag('skills-data')
+    return NextResponse.json({ success: true, data: skill })
+  } catch {
+    return NextResponse.json({ error: 'Failed to update skill' }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  return PUT(req)
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'GET, POST, PUT, PATCH, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}

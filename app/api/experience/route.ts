@@ -34,6 +34,28 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PUT(req: NextRequest) {
+  if (!isAuthenticated(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    await connectDB()
+    const body = await req.json()
+    const id = body?._id
+    if (!id) return NextResponse.json({ error: 'Experience id is required' }, { status: 400 })
+    delete body._id
+    delete body.__v
+    const exp = await Experience.findByIdAndUpdate(id, body, { new: true })
+    if (!exp) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    revalidateTag('experience-data')
+    return NextResponse.json({ success: true, data: exp })
+  } catch {
+    return NextResponse.json({ error: 'Failed to update experience' }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  return PUT(req)
+}
+
 export async function DELETE(req: NextRequest) {
   if (!isAuthenticated(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
@@ -46,4 +68,15 @@ export async function DELETE(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 }

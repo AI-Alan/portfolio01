@@ -8,3 +8,14 @@ export async function GET(req: NextRequest) {
   if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   return NextResponse.json({ success: true, email: payload.email })
 }
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}

@@ -27,8 +27,7 @@ export async function GET() {
   }
 }
 
-// PUT /api/profile — admin only
-export async function PUT(req: NextRequest) {
+async function updateProfile(req: NextRequest) {
   if (!isAuthenticated(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -53,4 +52,31 @@ export async function PUT(req: NextRequest) {
     console.error('Profile PUT error:', error)
     return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
+}
+
+// PUT /api/profile — admin only
+export async function PUT(req: NextRequest) {
+  return updateProfile(req)
+}
+
+// PATCH /api/profile — admin only (alias for clients/proxies that prefer PATCH)
+export async function PATCH(req: NextRequest) {
+  return updateProfile(req)
+}
+
+// POST /api/profile — admin only (alias to avoid 405 in some deployments/clients)
+export async function POST(req: NextRequest) {
+  return updateProfile(req)
+}
+
+// OPTIONS /api/profile — allow CORS preflight in cross-origin admin setups
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: 'GET, PUT, PATCH, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, PUT, PATCH, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
 }
